@@ -1,9 +1,26 @@
 #!/bin/bash
 
-read -p "Enter Your Name: " name
+read -p "Enter your name: " name
+#making submission_reminder_{name} directory
+
 App_Dir="submission_reminder_$name"
 mkdir -p "$App_Dir"/{app,modules,assets,config}
-cat > "$App_Dir/app/reminder.sh" <<'EOF'
+#creating the files and their contents
+
+app="$App_Dir/app"
+modules="$App_Dir/modules"
+assets="$App_Dir/assets"
+config="$App_Dir/config"
+
+#creation of config.env file and its contents
+cat > "$config/config.env" << 'EOF'
+# This is the config file
+ASSIGNMENT="Shell Navigation"
+DAYS_REMAINING=2
+EOF
+
+#create reminder.sh shell script and its contents
+cat > "$app/reminder.sh" << 'EOF'
 #!/bin/bash
 
 # Source environment variables and helper functions
@@ -11,16 +28,18 @@ source ./config/config.env
 source ./modules/functions.sh
 
 # Path to the submissions file
-submissions_file="./assets/submissions.txt"
+submissions_file="$(dirname "$0")/../assets/submissions.txt"
 
 # Print remaining time and run the reminder function
 echo "Assignment: $ASSIGNMENT"
 echo "Days remaining to submit: $DAYS_REMAINING days"
 echo "--------------------------------------------"
 
-check_submissions $submissions_file"
+check_submissions $submissions_file
 EOF
-cat > "$App_Dir/modules/functions.sh" <<'EOF'
+
+#create functions.sh shell script and its contents
+cat > "$modules/functions.sh" << 'EOF'
 #!/bin/bash
 
 # Function to read submissions file and output students who have not submitted
@@ -43,29 +62,53 @@ function check_submissions {
 }
 EOF
 
-cat > "$App_Dir/assets/submissions.txt" <<'EOF'
+#creation of submissions.txt file and its contents
+cat > "$assets/submissions.txt" << 'EOF'
 student, assignment, submission status
 Chinemerem, Shell Navigation, not submitted
 Chiagoziem, Git, submitted
 Divine, Shell Navigation, not submitted
 Anissa, Shell Basics, submitted
-George, Process management, submitted
-Julia, Permissions, not submitted
-Keza, Signaling, not submitted
-Morry, Shell scripting, submitted
-Jolly, Linux fundamentals, submitted
-David, Conditions and Functions, not submitted
+George, Git, submitted
+Julia, Git, not submitted
+Kenny, Shell Navigation, not submitted
+James, shell Basics, submitted
+Libron, Shell Navigation, not submitted
+Michael, Git, not submitted
+Jordan, Shell Basics, submitted
 EOF
-
-cat > "$App_Dir/config/config.env" <<'EOF'
-# This is the config file
-ASSIGNMENT="Shell Navigation"
-DAYS_REMAINING=2
-EOF
-
-chmod +x "$App_Dir/*/*.sh" "$App_Dir/*.sh"
 
 cat > "$App_Dir/startup.sh" << 'EOF'
 #!/bin/bash
+
+# Get absolute path of this script
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Path to reminder.sh
+reminder_script="$script_dir/app/reminder.sh"
+
+# Check if config file exists
+if [ ! -f "$script_dir/config/config.env" ]; then
+    echo "Error: config.env not found. Please run this script from inside $script_dir"
+    exit 1
+fi
+
+# Launch the reminder app
+bash "$reminder_script"
+
+EOF
+
+#Give .sh files excecution permissions
+chmod +x $app/*
+chmod +x $modules/*
+cd $App_Dir
+chmod +x startup.sh
+cd ..
+
+
+echo "wow! Environment has been created successfully"
+echo "To test the application run:"
+echo "cd $App_Dir && ./startup.sh"
+
 
 
